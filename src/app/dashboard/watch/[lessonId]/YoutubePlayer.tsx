@@ -18,11 +18,10 @@ export default function YoutubePlayer({ youtubeUrl, username }: { youtubeUrl: st
         referrerPolicy="strict-origin-when-cross-origin"
       />
       {/* Block top bar: title + Share + YouTube link */}
-      <div className="top-0 left-0 z-10 absolute bg-transparent w-[100px] h-[58px]" style={{ pointerEvents: "auto" }} aria-hidden />
+      <div className="top-0 left-0 z-10 absolute bg-transparent w-[70%] sm:w-[75%] md:w-[80%] h-[58px]" style={{ pointerEvents: "auto" }} aria-hidden />
       {/* Block bottom-right YouTube button (the big one before play + small after). Covers ~80x36px corner where YouTube logo lives. Leaves other controls accessible */}
       <div className="right-0 bottom-0 z-10 absolute bg-transparent w-[385px] h-[60px]" style={{ pointerEvents: "auto" }} aria-hidden />
       {/* Also block center big YouTube play overlay before start? YouTube shows large play button center - we let it pass through so user can start, but block its YouTube link: the big button is centered, we keep it clickable for play, so not blocked */}
-      <div className="bottom-0 left-0 z-10 absolute bg-transparent w-[85px] h-[60px]" style={{ pointerEvents: "auto" }} aria-hidden />
 
       <div className="right-0 bottom-0 left-0 z-10 absolute bg-transparent w-[1005px] h-[72px]" style={{ pointerEvents: "auto" }} aria-hidden />
 
