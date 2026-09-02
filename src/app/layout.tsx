@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans bg-zinc-50 dark:bg-zinc-950">
+      <body className="flex flex-col bg-zinc-50 dark:bg-zinc-950 min-h-full font-sans">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="border-t py-6 text-center text-sm text-muted-foreground bg-white">
-          © {new Date().getFullYear()} منصة الأستاذ - جميع الحقوق محفوظة
+        <footer className="bg-white py-6 border-t text-muted-foreground text-sm text-center">
+          © {new Date().getFullYear()} منصة أحمد الجزار - جميع الحقوق محفوظة
         </footer>
       </body>
     </html>
