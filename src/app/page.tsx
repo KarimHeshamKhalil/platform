@@ -40,9 +40,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
             <p className="text-muted-foreground text-lg leading-relaxed">
               شرح مبسط، متابعة مستمرة، وامتحانات دورية. جميع الكورسات منظمة حسب السنة الدراسية - كل كورس مقسم إلى Units وكل Unit يحتوي على فيديوهات و PDFs.
             </p>
-            <div className="flex gap-3">
-              <Button size="lg" asChild><Link href="#courses">تصفح الكورسات</Link></Button>
-              <Button size="lg" variant="outline" asChild><Link href="/register">انشاء حساب جديد</Link></Button>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Button size="lg" className="whitespace-nowrap" asChild><Link href="#courses">تصفح الكورسات</Link></Button>
+              <Button size="lg" variant="outline" className="whitespace-nowrap" asChild><Link href="/register">انشاء حساب جديد</Link></Button>
             </div>
             <div className="flex gap-6 pt-4 text-sm">
               <span className="flex items-center gap-2"><Users size={18} /> +5000 طالب</span>

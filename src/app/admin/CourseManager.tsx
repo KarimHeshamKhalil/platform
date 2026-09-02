@@ -104,13 +104,13 @@ export default function CourseManager({ courses }: { courses: any[] }) {
   }
 
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
+    <div className="gap-6 grid lg:grid-cols-3">
       <Card>
         <CardHeader><CardTitle>1. انشاء كورس جديد</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <div><Label>العنوان</Label><Input value={title} onChange={e=>setTitle(e.target.value)} placeholder="فيزياء - تالتة ثانوي"/></div>
+          <div><Label>العنوان</Label><Input value={title} onChange={e=>setTitle(e.target.value)} placeholder="الشهر الاول"/></div>
           <div><Label>السنة</Label>
-            <select value={year} onChange={e=>setYear(e.target.value)} className="w-full border rounded-md h-9 px-3 text-sm bg-background">
+            <select value={year} onChange={e=>setYear(e.target.value)} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
                 <option value="اولي ثانوي">اولي ثانوي</option>
                 <option value="تانية ثانوي">تانية ثانوي</option>
                 <option value="تالتة ثانوي">تالتة ثانوي</option>
@@ -120,7 +120,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
           <div><Label>الوصف</Label><Textarea value={desc} onChange={e=>setDesc(e.target.value)}/></div>
           <div><Label>صورة غلاف الكورس (اختياري)</Label><Input type="file" accept="image/*" onChange={e=>setCourseCover(e.target.files?.[0]||null)} /></div>
           <Button onClick={createCourse} disabled={loading} className="w-full">انشاء الكورس</Button>
-          {msg && <p className="text-xs bg-blue-50 border p-2 rounded whitespace-pre-wrap">{msg}</p>}
+          {msg && <p className="bg-blue-50 p-2 border rounded text-xs whitespace-pre-wrap">{msg}</p>}
         </CardContent>
       </Card>
 
@@ -128,13 +128,13 @@ export default function CourseManager({ courses }: { courses: any[] }) {
         <CardHeader><CardTitle>2. اضافة Unit للكورس</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label>اختر الكورس</Label>
-            <select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} className="w-full border rounded-md h-9 px-3 text-sm bg-background">
+            <select value={selectedCourse} onChange={e=>setSelectedCourse(e.target.value)} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
               <option value="">اختر كورس</option>
               {courses.map((c:any)=><option key={c.id} value={c.id}>{c.title} ({c.year})</option>)}
             </select>
           </div>
           <div><Label>اسم الـ Unit</Label><Input value={unitTitle} onChange={e=>setUnitTitle(e.target.value)} placeholder="Unit 1 - الحركة"/></div>
-          <div><Label>صورة غلاف الـ Unit (اختياري)</Label><Input type="file" accept="image/*" onChange={e=>setUnitCover(e.target.files?.[0]||null)} /><p className="text-xs text-muted-foreground mt-1">تظهر في لوحة الطالب وصفحة الكورس</p></div>
+          <div><Label>صورة غلاف الـ Unit (اختياري)</Label><Input type="file" accept="image/*" onChange={e=>setUnitCover(e.target.files?.[0]||null)} /><p className="mt-1 text-muted-foreground text-xs">تظهر في لوحة الطالب وصفحة الكورس</p></div>
           <Button onClick={createUnit} className="w-full" disabled={loading}>اضافة Unit</Button>
         </CardContent>
       </Card>
@@ -143,27 +143,27 @@ export default function CourseManager({ courses }: { courses: any[] }) {
         <CardHeader><CardTitle>3. رفع Video / PDF</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label>اختر الكورس</Label>
-            <select value={lessonCourseId} onChange={e=>setLessonCourseId(e.target.value)} className="w-full border rounded-md h-9 px-3 text-sm bg-background">
+            <select value={lessonCourseId} onChange={e=>setLessonCourseId(e.target.value)} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
               <option value="">اختر الكورس أولاً</option>
               {courses.map((c:any)=><option key={c.id} value={c.id}>{c.title} ({c.year})</option>)}
             </select>
           </div>
           <div><Label>اختر الـ Unit</Label>
-            <select value={selectedUnit} onChange={e=>setSelectedUnit(e.target.value)} className="w-full border rounded-md h-9 px-3 text-sm bg-background" disabled={!lessonCourseId}>
+            <select value={selectedUnit} onChange={e=>setSelectedUnit(e.target.value)} className="bg-background px-3 border rounded-md w-full h-9 text-sm" disabled={!lessonCourseId}>
               <option value="">{units.length ? "اختر Unit" : "لا يوجد Units - أنشئ Unit أولاً"}</option>
               {units.map((u:any)=><option key={u.id} value={u.id}>{u.title}</option>)}
             </select>
           </div>
           <div><Label>عنوان الدرس</Label><Input value={lessonTitle} onChange={e=>setLessonTitle(e.target.value)} placeholder="الدرس الأول - الشرح"/></div>
           <div><Label>النوع</Label>
-            <select value={lessonType} onChange={e=>setLessonType(e.target.value as any)} className="w-full border rounded-md h-9 px-3 text-sm bg-background">
+            <select value={lessonType} onChange={e=>setLessonType(e.target.value as any)} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
               <option value="video">Video</option>
               <option value="pdf">PDF</option>
             </select>
           </div>
           <div><Label>الملف {lessonType==="video" ? "(mp4)" : "(pdf)"}</Label><Input type="file" accept={lessonType==="video"?"video/*":"application/pdf"} onChange={e=>setFile(e.target.files?.[0]||null)}/></div>
           <Button onClick={createLesson} disabled={loading} className="w-full">رفع الدرس</Button>
-          {msg && <p className="text-xs bg-blue-50 border p-2 rounded whitespace-pre-wrap">{msg}</p>}
+          {msg && <p className="bg-blue-50 p-2 border rounded text-xs whitespace-pre-wrap">{msg}</p>}
         </CardContent>
       </Card>
     </div>
