@@ -46,7 +46,8 @@ create table lessons (
   unit_id uuid not null references units(id) on delete cascade,
   title text not null,
   type text not null check (type in ('video','pdf')),
-  video_url text, -- path in storage bucket 'videos'
+  video_url text, -- path in storage bucket 'videos' (قديم - للتوافق)
+  youtube_url text, -- رابط يوتيوب Unlisted (جديد)
   pdf_url text,   -- path in storage bucket 'pdfs'
   order_index integer not null default 0,
   created_at timestamp with time zone default now()

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { extractYoutubeId } from "@/lib/youtube";
 
 export default function CourseManager({ courses }: { courses: any[] }) {
   const [title, setTitle] = useState("");
@@ -21,15 +22,15 @@ export default function CourseManager({ courses }: { courses: any[] }) {
   const [unitTitle, setUnitTitle] = useState("");
   const [unitCover, setUnitCover] = useState<File|null>(null);
 
-  // Lesson creation - teacher friendly (no manual Unit ID)
+  // Lesson creation
   const [lessonCourseId, setLessonCourseId] = useState("");
   const [units, setUnits] = useState<any[]>([]);
   const [selectedUnit, setSelectedUnit] = useState("");
   const [lessonTitle, setLessonTitle] = useState("");
   const [lessonType, setLessonType] = useState<"video"|"pdf">("video");
+  const [youtubeLink, setYoutubeLink] = useState("");
   const [file, setFile] = useState<File|null>(null);
 
-  // Load units when course selected for lesson
   useEffect(()=>{
     async function load(){
       if (!lessonCourseId) { setUnits([]); setSelectedUnit(""); return; }
@@ -67,7 +68,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
     if (unitCover) {
       const path = `units/${Date.now()}-${unitCover.name.replace(/\s+/g,"-")}`;
       const { error: upErr } = await supabase.storage.from("covers").upload(path, unitCover);
-      if (upErr) { setLoading(false); return setMsg("خطأ رفع صورة الـ Unit: " + upErr.message + " - تأكد من تشغيل create_buckets.sql"); }
+      if (upErr) { setLoading(false); return setMsg("خطأ رفع صورة الـ Unit: " + upErr.message); }
       coverUrl = path;
     }
     const { error } = await supabase.from("units").insert({ course_id: selectedCourse, title: unitTitle, cover_url: coverUrl });
@@ -80,28 +81,39 @@ export default function CourseManager({ courses }: { courses: any[] }) {
     if (!lessonCourseId) return setMsg("اختر الكورس أولاً");
     if (!selectedUnit) return setMsg("اختر الـ Unit");
     if (!lessonTitle) return setMsg("اكتب عنوان الدرس");
-    if (!file) return setMsg("اختر الملف");
     setLoading(true);
     setMsg("");
     const supabase = createClient();
-    const bucket = lessonType==="video"?"videos":"pdfs";
+
+    if (lessonType === "video") {
+      const ytId = extractYoutubeId(youtubeLink);
+      if (!ytId) { setLoading(false); return setMsg("رابط اليوتيوب غير صحيح. الصق رابط مثل https://www.youtube.com/watch?v=XXXX أو https://youtu.be/XXXX"); }
+      const payload: any = { unit_id: selectedUnit, title: lessonTitle, type: "video", youtube_url: youtubeLink.trim(), video_url: null };
+      const { error } = await supabase.from("lessons").insert(payload);
+      setLoading(false);
+      if (error) setMsg("خطأ حفظ الدرس: " + error.message + " - تأكد من تشغيل add_youtube_support.sql");
+      else { setMsg("تم اضافة الفيديو ✓ (YouTube ID: "+ytId+")"); setTimeout(()=>location.reload(), 800); }
+      return;
+    }
+
+    // PDF
+    if (!file) { setLoading(false); return setMsg("اختر ملف PDF"); }
     const safeName = file.name.replace(/\s+/g, "-");
     const path = `${selectedUnit}/${Date.now()}-${safeName}`;
-    const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
+    const { error: upErr } = await supabase.storage.from("pdfs").upload(path, file, { upsert: false });
     if (upErr) {
       setLoading(false);
-      if (upErr.message.includes("Bucket not found")) {
-        return setMsg("خطأ: الـ Bucket غير موجود. شغّل ملف create_buckets.sql في Supabase SQL Editor");
-      }
+      if (upErr.message.includes("Bucket not found")) return setMsg("خطأ: الـ Bucket غير موجود. شغّل create_buckets.sql");
       return setMsg("خطأ رفع: " + upErr.message);
     }
-    const payload: any = { unit_id: selectedUnit, title: lessonTitle, type: lessonType };
-    if (lessonType==="video") payload.video_url = path; else payload.pdf_url = path;
+    const payload: any = { unit_id: selectedUnit, title: lessonTitle, type: "pdf", pdf_url: path };
     const { error } = await supabase.from("lessons").insert(payload);
     setLoading(false);
     if (error) setMsg("خطأ حفظ الدرس: " + error.message);
-    else { setMsg("تم رفع الدرس ✓"); setTimeout(()=>location.reload(), 800); }
+    else { setMsg("تم رفع PDF ✓"); setTimeout(()=>location.reload(), 800); }
   }
+
+  const ytPreviewId = extractYoutubeId(youtubeLink);
 
   return (
     <div className="gap-6 grid lg:grid-cols-3">
@@ -134,13 +146,13 @@ export default function CourseManager({ courses }: { courses: any[] }) {
             </select>
           </div>
           <div><Label>اسم الـ Unit</Label><Input value={unitTitle} onChange={e=>setUnitTitle(e.target.value)} placeholder="Unit 1 - الحركة"/></div>
-          <div><Label>صورة غلاف الـ Unit (اختياري)</Label><Input type="file" accept="image/*" onChange={e=>setUnitCover(e.target.files?.[0]||null)} /><p className="mt-1 text-muted-foreground text-xs">تظهر في لوحة الطالب وصفحة الكورس</p></div>
+          <div><Label>صورة غلاف الـ Unit (اختياري)</Label><Input type="file" accept="image/*" onChange={e=>setUnitCover(e.target.files?.[0]||null)} /></div>
           <Button onClick={createUnit} className="w-full" disabled={loading}>اضافة Unit</Button>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>3. رفع Video / PDF</CardTitle></CardHeader>
+        <CardHeader><CardTitle>3. اضافة درس</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label>اختر الكورس</Label>
             <select value={lessonCourseId} onChange={e=>setLessonCourseId(e.target.value)} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
@@ -156,13 +168,21 @@ export default function CourseManager({ courses }: { courses: any[] }) {
           </div>
           <div><Label>عنوان الدرس</Label><Input value={lessonTitle} onChange={e=>setLessonTitle(e.target.value)} placeholder="الدرس الأول - الشرح"/></div>
           <div><Label>النوع</Label>
-            <select value={lessonType} onChange={e=>setLessonType(e.target.value as any)} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
-              <option value="video">Video</option>
+            <select value={lessonType} onChange={e=>{setLessonType(e.target.value as any); setYoutubeLink(""); setFile(null);}} className="bg-background px-3 border rounded-md w-full h-9 text-sm">
+              <option value="video">Video (YouTube Unlisted)</option>
               <option value="pdf">PDF</option>
             </select>
           </div>
-          <div><Label>الملف {lessonType==="video" ? "(mp4)" : "(pdf)"}</Label><Input type="file" accept={lessonType==="video"?"video/*":"application/pdf"} onChange={e=>setFile(e.target.files?.[0]||null)}/></div>
-          <Button onClick={createLesson} disabled={loading} className="w-full">رفع الدرس</Button>
+          {lessonType==="video" ? (
+            <>
+              <div><Label>رابط يوتيوب Unlisted</Label><Input placeholder="https://www.youtube.com/watch?v=..." value={youtubeLink} onChange={e=>setYoutubeLink(e.target.value)} dir="ltr" /></div>
+              {ytPreviewId && <div className="rounded border overflow-hidden"><img src={`https://img.youtube.com/vi/${ytPreviewId}/hqdefault.jpg`} alt="preview" className="w-full" /><p className="text-xs text-center p-1 bg-zinc-50">ID: {ytPreviewId} ✓</p></div>}
+              <p className="text-xs text-muted-foreground">الصق رابط الفيديو بعد رفعه كـ Unlisted على قناة المدرس</p>
+            </>
+          ) : (
+            <div><Label>ملف PDF</Label><Input type="file" accept="application/pdf" onChange={e=>setFile(e.target.files?.[0]||null)}/></div>
+          )}
+          <Button onClick={createLesson} disabled={loading} className="w-full">{lessonType==="video" ? "اضافة الفيديو" : "رفع PDF"}</Button>
           {msg && <p className="bg-blue-50 p-2 border rounded text-xs whitespace-pre-wrap">{msg}</p>}
         </CardContent>
       </Card>

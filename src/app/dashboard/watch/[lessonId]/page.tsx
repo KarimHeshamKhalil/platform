@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import SecurePlayer from "./SecurePlayer";
+import YoutubePlayer from "./YoutubePlayer";
 
 export default async function WatchPage({ params }: { params: Promise<{ lessonId: string }> }) {
   const { lessonId } = await params;
@@ -11,7 +12,6 @@ export default async function WatchPage({ params }: { params: Promise<{ lessonId
   const { data: lesson } = await supabase.from("lessons").select("*, units!inner(course_id, title, courses(title, year))").eq("id", lessonId).single();
   if (!lesson) return notFound();
 
-  // check enrollment approved + year match
   const courseId = (lesson.units as any).course_id;
   const courseYear = (lesson.units as any).courses.year;
   const { data: enrollment } = await supabase.from("enrollments").select("status").eq("user_id", user.id).eq("course_id", courseId).single();
@@ -22,13 +22,12 @@ export default async function WatchPage({ params }: { params: Promise<{ lessonId
     if (enrollment?.status !== "approved") redirect(`/courses/${courseId}`);
   }
 
-  // generate signed URLs via service role
   const service = await createServiceClient();
   let videoSignedUrl: string | null = null;
   let pdfSignedUrl: string | null = null;
 
   if (lesson.type === "video" && lesson.video_url) {
-    const { data } = await service.storage.from("videos").createSignedUrl(lesson.video_url, 60*60); // 1 hour
+    const { data } = await service.storage.from("videos").createSignedUrl(lesson.video_url, 60*60);
     videoSignedUrl = data?.signedUrl || null;
   }
   if (lesson.type === "pdf" && lesson.pdf_url) {
@@ -43,7 +42,13 @@ export default async function WatchPage({ params }: { params: Promise<{ lessonId
       <p className="text-sm text-muted-foreground">{(lesson.units as any).courses.title} &gt; Unit: {(lesson.units as any).title}</p>
       <h1 className="text-2xl font-bold">{lesson.title} <span className="text-sm font-normal text-muted-foreground">({lesson.type==="video"?"Video":"PDF"})</span></h1>
       {lesson.type==="video" ? (
-        videoSignedUrl ? <SecurePlayer url={videoSignedUrl} username={profileFull?.username||""} /> : <p className="bg-red-50 p-4 rounded">الفيديو غير متاح - تواصل مع الإدارة</p>
+        (lesson as any).youtube_url ? (
+          <YoutubePlayer youtubeUrl={(lesson as any).youtube_url} username={profileFull?.username||""} />
+        ) : videoSignedUrl ? (
+          <SecurePlayer url={videoSignedUrl} username={profileFull?.username||""} />
+        ) : (
+          <p className="bg-red-50 p-4 rounded">الفيديو غير متاح - تواصل مع الإدارة</p>
+        )
       ) : (
         pdfSignedUrl ? (
           <div className="border rounded-xl overflow-hidden">

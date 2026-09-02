@@ -42,9 +42,9 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
   const courseCover = getPublicUrl(course.cover_url);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <div className="bg-white rounded-2xl border p-6 md:p-8 flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-64 h-44 bg-zinc-100 rounded-xl flex items-center justify-center overflow-hidden">
+    <div className="space-y-6 mx-auto px-4 py-8 max-w-5xl">
+      <div className="flex md:flex-row flex-col gap-6 bg-white p-6 md:p-8 border rounded-2xl">
+        <div className="flex justify-center items-center bg-zinc-100 rounded-xl w-full md:w-64 h-44 overflow-hidden">
           {courseCover ? <img src={courseCover} alt={course.title} className="w-full h-full object-cover"/> : <span className="text-muted-foreground">Cover</span>}
         </div>
         <div className="flex-1 space-y-3">
@@ -52,10 +52,10 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
             <Badge>{course.year}</Badge>
             <Badge variant="outline">{course.price} جنيه</Badge>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold">{course.title}</h1>
+          <h1 className="font-bold text-2xl md:text-3xl">{course.title}</h1>
           <p className="text-muted-foreground">{course.description}</p>
           {isWrongYear && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-800 text-sm p-3 rounded-lg">
+            <div className="bg-orange-50 p-3 border border-orange-200 rounded-lg text-orange-800 text-sm">
               هذا الكورس مخصص لـ <b>{course.year}</b> بينما حسابك مسجل كـ <b>{profileYear}</b> — لا يمكنك الاشتراك إلا في كورسات سنتك. تواصل مع الإدارة لتغيير السنة.
             </div>
           )}
@@ -70,39 +70,39 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
               <SubscribeButton courseId={id} enrollment={enrollment} />
             )}
           </div>
-          {!isApproved && !isWrongYear && <p className="text-xs text-muted-foreground flex gap-1 items-center"><Lock size={12}/> المحتوي مقفل - الفيديوهات والـ PDFs تظهر فقط بعد موافقة الإدارة على الدفع</p>}
+          {!isApproved && !isWrongYear && <p className="flex items-center gap-1 text-muted-foreground text-xs"><Lock size={12}/> المحتوي مقفل - الفيديوهات والـ PDFs تظهر فقط بعد موافقة الإدارة على الدفع</p>}
         </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex gap-2"><Layers size={20}/> محتوى الكورس - Units</CardTitle>
-          <p className="text-sm text-muted-foreground">الـ Units والفيديوهات والـ PDFs - المعاينة فقط بالأسماء</p>
+          <p className="text-muted-foreground text-sm">الـ Units والفيديوهات والـ PDFs - المعاينة فقط بالأسماء</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {!units || units.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">لم يضف المدرس Units بعد</p>
+            <p className="py-8 text-muted-foreground text-center">لم يضف المدرس Units بعد</p>
           ) : units.map((unit: any, idx: number) => {
             const unitCover = getPublicUrl(unit.cover_url);
             return (
-            <div key={unit.id} className="border rounded-xl p-4 bg-zinc-50/50">
-              <div className="flex gap-4 items-start">
-                {unitCover && <img src={unitCover} alt={unit.title} className="w-24 h-24 rounded-lg object-cover border flex-shrink-0" />}
+            <div key={unit.id} className="bg-zinc-50/50 p-4 border rounded-xl">
+              <div className="flex items-start gap-4">
+                {unitCover && <img src={unitCover} alt={unit.title} className="flex-shrink-0 border rounded-lg w-24 h-24 object-cover" />}
                 <div className="flex-1">
-                  <h3 className="font-bold flex gap-2">Unit {idx + 1}: {unit.title}</h3>
-                  <div className="mt-3 space-y-2">
+                  <h3 className="flex gap-2 font-bold">Unit {idx + 1}: {unit.title}</h3>
+                  <div className="space-y-2 mt-3">
                     {unit.lessons?.length ? unit.lessons.sort((a:any,b:any)=>a.order_index-b.order_index).map((lesson:any)=>(
-                      <div key={lesson.id} className="flex justify-between items-center bg-white border rounded-lg px-3 py-2">
-                        <span className="flex gap-2 items-center text-sm">
+                      <div key={lesson.id} className="flex justify-between items-center bg-white px-3 py-2 border rounded-lg">
+                        <span className="flex items-center gap-2 text-sm">
                           {lesson.type === "video" ? <Video size={16} className="text-blue-600"/> : <FileText size={16} className="text-red-600"/>}
                           {lesson.title}
-                          <span className="text-xs text-muted-foreground">({lesson.type === "video" ? "Video" : "PDF"})</span>
+                          <span className="text-muted-foreground text-xs">({lesson.type === "video" ? "Video" : "PDF"})</span>
                         </span>
-                        <span className="text-xs flex gap-1 items-center text-muted-foreground">
+                        <span className="flex items-center gap-1 text-muted-foreground text-xs">
                           {isApproved ? <a href={`/dashboard/watch/${lesson.id}`} className="text-primary underline">مشاهدة</a> : <><Lock size={12}/> مقفل</>}
                         </span>
                       </div>
-                    )) : <p className="text-sm text-muted-foreground">لا يوجد دروس في هذا الـ Unit بعد</p>}
+                    )) : <p className="text-muted-foreground text-sm">لا يوجد دروس في هذا الـ Unit بعد</p>}
                   </div>
                 </div>
               </div>
