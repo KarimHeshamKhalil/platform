@@ -147,5 +147,60 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- ============================================
+-- EXAMS / HOMEWORK (Unit -> Exam) - see add_exams_support.sql for full definition
+-- ============================================
+create extension if not exists "pgcrypto";
+create table if not exists exams (
+  id uuid primary key default gen_random_uuid(),
+  unit_id uuid not null references units(id) on delete cascade,
+  title text not null,
+  type text not null check (type in ('exam','homework')),
+  time_limit_minutes int,
+  shuffle_questions boolean default false,
+  max_attempts int default 1,
+  pass_grade_percent int,
+  available_from timestamptz,
+  available_until timestamptz,
+  is_published boolean default false,
+  created_by uuid references auth.users(id),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create table if not exists questions (
+  id uuid primary key default gen_random_uuid(),
+  exam_id uuid not null references exams(id) on delete cascade,
+  question_order int not null,
+  type text not null check (type in ('mcq','true_false','short_answer','essay')),
+  prompt text not null,
+  points numeric default 1,
+  created_at timestamptz default now()
+);
+create table if not exists question_options (
+  id uuid primary key default gen_random_uuid(),
+  question_id uuid not null references questions(id) on delete cascade,
+  option_text text not null,
+  is_correct boolean default false,
+  option_order int not null
+);
+create table if not exists exam_submissions (
+  id uuid primary key default gen_random_uuid(),
+  exam_id uuid not null references exams(id) on delete cascade,
+  student_id uuid not null references auth.users(id) on delete cascade,
+  started_at timestamptz default now(),
+  submitted_at timestamptz,
+  score numeric,
+  attempt_number int default 1,
+  unique(exam_id, student_id, attempt_number)
+);
+create table if not exists submission_answers (
+  id uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references exam_submissions(id) on delete cascade,
+  question_id uuid not null references questions(id),
+  response text,
+  is_correct boolean,
+  points_awarded numeric
+);
+
 -- Helper to make a user admin (run manually)
 -- update profiles set role='admin' where username='ahmed';

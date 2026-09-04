@@ -52,7 +52,7 @@ export default async function WatchPage({ params }: { params: Promise<{ lessonId
       ) : (
         pdfSignedUrl ? (
           <div className="border rounded-xl overflow-hidden">
-            <div className="bg-zinc-100 p-2 text-sm flex justify-between">
+            <div className="bg-[#EDE8D0] p-2 text-sm flex justify-between">
               <span>PDF - {lesson.title}</span>
               <a href={pdfSignedUrl} target="_blank" className="underline text-primary">فتح في تبويب جديد</a>
             </div>

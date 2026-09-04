@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Lock, Video, FileText, Layers } from "lucide-react";
+import { Lock, Video, FileText, Layers, ClipboardCheck, FileQuestion } from "lucide-react";
 import SubscribeButton from "./SubscribeButton";
 
 export default async function CoursePage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +16,12 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
     id, title, cover_url, order_index,
     lessons ( id, title, type, order_index )
   `).eq("course_id", id).order("order_index");
+  const unitIds = units?.map((u:any)=>u.id) || [];
+  let examsByUnit: Record<string, any[]> = {};
+  if (unitIds.length) {
+    const { data: exams } = await supabase.from("exams").select("id,title,type,is_published,unit_id").in("unit_id", unitIds).order("created_at");
+    (exams||[]).forEach((e:any)=>{ if (!examsByUnit[e.unit_id]) examsByUnit[e.unit_id]=[]; examsByUnit[e.unit_id].push(e); });
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
   let enrollment = null;
@@ -43,8 +49,8 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="space-y-6 mx-auto px-4 py-8 max-w-5xl">
-      <div className="flex md:flex-row flex-col gap-6 bg-white p-6 md:p-8 border rounded-2xl">
-        <div className="flex justify-center items-center bg-zinc-100 rounded-xl w-full md:w-64 h-44 overflow-hidden">
+      <div className="flex md:flex-row flex-col gap-6 bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 p-6 md:p-8 border rounded-2xl">
+        <div className="flex justify-center items-center bg-[#EDE8D0] rounded-xl w-full md:w-64 h-44 overflow-hidden">
           {courseCover ? <img src={courseCover} alt={course.title} className="w-full h-full object-cover"/> : <span className="text-muted-foreground">Cover</span>}
         </div>
         <div className="flex-1 space-y-3">
@@ -85,14 +91,14 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
           ) : units.map((unit: any, idx: number) => {
             const unitCover = getPublicUrl(unit.cover_url);
             return (
-            <div key={unit.id} className="bg-zinc-50/50 p-4 border rounded-xl">
+            <div key={unit.id} className="bg-[#F5F1E8] p-4 border rounded-xl">
               <div className="flex items-start gap-4">
                 {unitCover && <img src={unitCover} alt={unit.title} className="flex-shrink-0 border rounded-lg w-24 h-24 object-cover" />}
                 <div className="flex-1">
                   <h3 className="flex gap-2 font-bold">Unit {idx + 1}: {unit.title}</h3>
                   <div className="space-y-2 mt-3">
                     {unit.lessons?.length ? unit.lessons.sort((a:any,b:any)=>a.order_index-b.order_index).map((lesson:any)=>(
-                      <div key={lesson.id} className="flex justify-between items-center bg-white px-3 py-2 border rounded-lg">
+                      <div key={lesson.id} className="flex justify-between items-center bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 px-3 py-2 border rounded-lg">
                         <span className="flex items-center gap-2 text-sm">
                           {lesson.type === "video" ? <Video size={16} className="text-blue-600"/> : <FileText size={16} className="text-red-600"/>}
                           {lesson.title}
@@ -102,7 +108,21 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
                           {isApproved ? <a href={`/dashboard/watch/${lesson.id}`} className="text-primary underline">مشاهدة</a> : <><Lock size={12}/> مقفل</>}
                         </span>
                       </div>
-                    )) : <p className="text-muted-foreground text-sm">لا يوجد دروس في هذا الـ Unit بعد</p>}
+                    )) : null}
+                    {(examsByUnit[unit.id]||[]).map((ex:any)=>(
+                      <div key={ex.id} className="flex justify-between items-center bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 px-3 py-2 border rounded-lg border-dashed">
+                        <span className="flex items-center gap-2 text-sm">
+                          {ex.type==="exam" ? <FileQuestion size={16} className="text-purple-600"/> : <ClipboardCheck size={16} className="text-green-600"/>}
+                          {ex.title}
+                          <span className="text-muted-foreground text-xs">({ex.type==="exam"?"Exam":"Homework"})</span>
+                          {!ex.is_published && isAdmin && <span className="text-xs bg-orange-100 px-1 rounded">مسودة</span>}
+                        </span>
+                        <span className="flex items-center gap-1 text-muted-foreground text-xs">
+                          {isApproved ? <a href={`/dashboard/exams/${ex.id}`} className="text-primary underline">فتح</a> : <><Lock size={12}/> مقفل</>}
+                        </span>
+                      </div>
+                    ))}
+                    {!unit.lessons?.length && !(examsByUnit[unit.id]||[]).length && <p className="text-muted-foreground text-sm">لا يوجد محتوى في هذا الـ Unit بعد</p>}
                   </div>
                 </div>
               </div>

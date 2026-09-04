@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Users, Award, PlayCircle, Lock, Phone } from "lucide-react";
+import { BookOpen, Users, Award, PlayCircle, Lock, Phone, ArrowUpRight, Star, GraduationCap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 
@@ -12,140 +11,156 @@ const YEARS = ["اولي ثانوي", "تانية ثانوي", "تالتة ثا�
 export default async function Home({ searchParams }: { searchParams: Promise<{ year?: string }> }) {
   const { year: filterYear } = await searchParams;
   const activeYear = YEARS.includes(filterYear as any) ? filterYear! : null;
-
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect("/dashboard");
-
   let query = supabase.from("courses").select("*").eq("is_published", true).order("created_at", { ascending: false }).limit(12);
   if (activeYear) query = query.eq("year", activeYear);
   const { data: courses } = await query;
-
   function getPublicCoverUrl(path: string | null) {
     if (!path) return null;
     if (path.startsWith("http")) return path;
     const { data } = supabase.storage.from("covers").getPublicUrl(path);
     return data.publicUrl;
   }
-
   return (
-    <div className="flex flex-col">
-      <section className="bg-white border-b">
-        <div className="items-center gap-12 grid lg:grid-cols-2 mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 max-w-7xl">
-          <div className="space-y-6">
-            <Badge variant="secondary" className="text-sm">ثانوية عامة • اولي - تانية - تالتة ثانوي</Badge>
-            <h1 className="font-extrabold text-4xl lg:text-5xl leading-tight">
-              مع الأستاذ <span className="text-primary"> أحمد الجزار</span> التفوق <br /> مضمون في الثانوية
-            </h1>
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              شرح مبسط، متابعة مستمرة، وامتحانات دورية. جميع الكورسات منظمة حسب السنة الدراسية - كل كورس مقسم إلى Units وكل Unit يحتوي على فيديوهات و PDFs.
-            </p>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <Button size="lg" className="whitespace-nowrap" asChild><Link href="#courses">تصفح الكورسات</Link></Button>
-              <Button size="lg" variant="outline" className="whitespace-nowrap" asChild><Link href="/register">انشاء حساب جديد</Link></Button>
+    <div className="flex flex-col gap-6 px-3 sm:px-4 pb-6">
+      {/* Hero: two big cards - swapped */}
+      <section className="gap-4 grid lg:grid-cols-2 mx-auto w-full max-w-7xl">
+        {/* Left: Big info */}
+        <div className="flex flex-col gap-5 p-6 sm:p-8 min-h-[420px] lg:min-h-[520px] bento-card">
+          <div className="inline-flex items-center gap-1 bg-[#F5F1E8] dark:bg-zinc-800 px-2 py-1 border border-black rounded-full w-fit dark:text-zinc-100 text-xs">
+            <span className="inline-block bg-[#FF6B35] border border-black rounded-full w-2 h-2" /> ثانوية عامة • اولي - تانية - تالتة ثانوي
+          </div>
+          <h1 className="font-black lg:text-[44px] text-3xl sm:text-4xl leading-[1.05]">
+            تعليم ثانوي<br/>
+            <span className="inline-flex items-center gap-2">تفاعلي <span className="inline-block bg-[#FF6B35] border-[1.5px] border-black rounded-full w-7 h-7" /><span className="inline-block bg-[#F7F36A] dark:bg-[#4A4000] -ml-3 border-[1.5px] border-black dark:border-zinc-600 rounded-full w-7 h-7 text-black dark:text-[#F7F36A]" /></span><br/>
+            يلهم التفوق
+          </h1>
+          <p className="max-w-xl text-muted-foreground text-sm leading-relaxed">
+            شرح مبسط، متابعة يومية، واجبات وامتحانات لكل Unit — منصة تفاعلية حيث يلهم المدرس طلاب الثانوية لإطلاق قدراتهم.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button size="lg" className="bg-black dark:bg-white rounded-full text-white dark:text-black" asChild><Link href="#courses">ابدأ الآن <ArrowUpRight size={16}/></Link></Button>
+            <Button size="lg" variant="outline" className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-full" asChild><Link href="/register">انشاء حساب <PlayCircle size={16}/></Link></Button>
+          </div>
+          <div className="gap-3 grid grid-cols-3 mt-auto pt-2">
+            <div className="bg-[#EDE8D0] dark:bg-zinc-800 p-3 border border-black dark:border-zinc-700 rounded-2xl text-center">
+              <p className="flex justify-center gap-1 font-black text-lg"><Users size={16} className="mt-1"/>5000+</p><p className="text-muted-foreground text-xs">طالب</p>
             </div>
-            <div className="flex gap-6 pt-4 text-sm">
-              <span className="flex items-center gap-2"><Users size={18} /> +5000 طالب</span>
-              <span className="flex items-center gap-2"><Award size={18} /> خبرة 15 سنة</span>
-              <span className="flex items-center gap-2"><BookOpen size={18} /> 3 سنوات دراسية</span>
+            <div className="bg-[#F7F36A] dark:bg-[#00000] dark:bg-[#4A4000] p-3 border border-black dark:border-zinc-600 rounded-2xl text-black dark:text-[#F7F36A] text-center">
+              <p className="font-black text-lg">15 سنة</p><p className="text-xs">خبرة</p>
+            </div>
+            <div className="bg-white dark:bg-zinc-900 p-3 border border-black dark:border-zinc-700 rounded-2xl text-center">
+              <p className="flex justify-center gap-1 font-black text-lg"><BookOpen size={16} className="mt-1"/>3</p><p className="text-muted-foreground text-xs">سنوات</p>
             </div>
           </div>
-          <div className="relative">
-            <div className="flex flex-col justify-center items-center bg-zinc-100 border-2 border-dashed rounded-2xl aspect-[4/3] text-center">
-              <Image alt="Teacher Pic" src={"/images/teacher.JPG"} width={2000} height={2000} className="shadow-xl rounded-md" />
+        </div>
+
+        {/* Right: Teacher image - big */}
+        <div className="flex flex-col p-0 min-h-[420px] lg:min-h-[520px] overflow-hidden bento-card">
+          <div className="flex justify-between items-center bg-[#FF6B35] px-4 py-2 border-black border-b-[1.5px]">
+            <span className="text-white text-xs">●</span>
+          </div>
+          <div className="relative flex flex-1 justify-center items-center bg-[#F5F1E8] dark:bg-zinc-800 p-4 overflow-hidden">
+            <div className="bg-[#FFE8D6] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.1)] border-[2px] border-black rounded-full w-[75%] max-w-[340px] aspect-square overflow-hidden">
+              <Image alt="teacher" src={"/images/teacher.JPG"} width={600} height={600} className="w-full h-full object-cover" />
+            </div>
+            <div className="bottom-4 left-4 absolute bg-white dark:bg-zinc-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] px-3 py-2 border-[1.5px] border-black dark:border-zinc-700 rounded-2xl">
+              <p className="font-black text-sm">أحمد الجزار</p>
+              <p className="text-muted-foreground text-xs">15 سنة خبرة • فيزياء • 4.9 <Star size={10} className="inline fill-[#FF6B35] text-[#FF6B35]"/></p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="teacher" className="mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full max-w-7xl">
-        <div className="gap-6 grid md:grid-cols-3">
-          <Card>
-            <CardHeader><CardTitle className="flex gap-2"><Award size={20}/> خبرة طويلة</CardTitle></CardHeader>
-            <CardContent className="text-muted-foreground">شرح بنظام الثانوية الجديد مع متابعة واجبات وامتحانات شاملة لكل Unit.</CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle className="flex gap-2"><PlayCircle size={20}/> فيديوهات عالية الجودة</CardTitle></CardHeader>
-            <CardContent className="text-muted-foreground">مشغل فيديو آمن + ملفات PDF لكل درس، متاحة فقط للمشتركين.</CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle className="flex gap-2"><Phone size={20}/> متابعة واتساب</CardTitle></CardHeader>
-            <CardContent className="text-muted-foreground">دعم مباشر للطلاب وأولياء الأمور عبر رقم الواتساب المعلن.</CardContent>
-          </Card>
+      {/* Features bento */}
+      <section id="teacher" className="gap-4 grid md:grid-cols-3 mx-auto w-full max-w-7xl">
+        <div className="p-5 bento-card-lime">
+          <div className="flex justify-center items-center bg-black border border-black rounded-full w-10 h-10 text-white"><Award size={18}/></div>
+          <p className="mt-3 font-black">خبرة طويلة</p>
+          <p className="mt-1 text-muted-foreground text-sm">شرح بنظام الثانوية الجديد مع واجبات وامتحانات لكل Unit.</p>
+        </div>
+        <div className="p-5 bento-card">
+          <div className="flex justify-center items-center bg-[#FF6B35] border border-black rounded-full w-10 h-10 text-white"><PlayCircle size={18}/></div>
+          <p className="mt-3 font-black">فيديو آمن</p>
+          <p className="mt-1 text-muted-foreground text-sm">مشغل محمي بعلامة مائية + PDFs للمشتركين فقط.</p>
+        </div>
+        <div className="p-5 bento-card-warm">
+          <div className="flex justify-center items-center bg-white dark:bg-zinc-800 border border-black dark:border-zinc-700 rounded-full w-10 h-10 dark:text-zinc-100"><Phone size={18}/></div>
+          <p className="mt-3 font-black">متابعة واتساب</p>
+          <p className="mt-1 text-muted-foreground text-sm">دعم مباشر للطلاب وأولياء الأمور.</p>
         </div>
       </section>
 
-      <section id="courses" className="bg-zinc-100/50 py-16 border-y">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="flex flex-wrap justify-between items-end gap-4 mb-8">
+      {/* Courses */}
+      <section id="courses" className="mx-auto w-full max-w-7xl">
+        <div className="p-4 sm:p-6 bento-card">
+          <div className="flex flex-wrap justify-between items-end gap-4 mb-6">
             <div>
-              <h2 className="font-bold text-3xl">الكورسات المتاحة</h2>
-              <p className="mt-2 text-muted-foreground">اضغط على السنة لتصفية الكورسات - كزائر</p>
+              <h2 className="flex items-center gap-2 font-black text-2xl">الكورسات المتاحة <span className="inline-block bg-[#FF6B35] border border-black rounded-full w-2 h-2" /></h2>
+              <p className="mt-1 text-muted-foreground text-sm">اضغط السنة لتصفية الكورسات كزائر</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link href="/#courses" className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${!activeYear ? 'bg-black text-white border-black' : 'bg-white hover:bg-zinc-100'}`}>الكل</Link>
+              <Link href="/#courses" className={`px-4 py-1.5 rounded-full text-sm font-bold border-[1.5px] border-black transition ${!activeYear ? 'bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}>الكل</Link>
               {YEARS.map(y => (
-                <Link key={y} href={`/?year=${encodeURIComponent(y)}#courses`} className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${activeYear===y ? 'bg-black text-white border-black' : 'bg-white hover:bg-zinc-100'}`}>{y}</Link>
+                <Link key={y} href={`/?year=${encodeURIComponent(y)}#courses`} className={`px-4 py-1.5 rounded-full text-sm font-bold border-[1.5px] border-black transition ${activeYear===y ? 'bg-[#F7F36A] dark:bg-[#4A4000] dark:text-[#F7F36A] text-black dark:border-zinc-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}>{y}</Link>
               ))}
             </div>
           </div>
 
           {!courses || courses.length === 0 ? (
             activeYear ? (
-              <Card><CardContent className="py-12 text-muted-foreground text-center">لا يوجد كورسات في {activeYear} بعد</CardContent></Card>
+              <div className="p-8 text-center bento-card-warm">لا يوجد كورسات في {activeYear} بعد</div>
             ) : (
-              <div className="gap-6 grid md:grid-cols-3">
+              <div className="gap-4 grid md:grid-cols-3">
                 {[1,2,3].map(i=>(
-                  <Card key={i} className="overflow-hidden">
-                    <div className="flex justify-center items-center bg-zinc-200 h-48 text-muted-foreground">Cover</div>
-                    <CardHeader>
-                      <div className="flex justify-between">
-                        <Badge>اولي ثانوي</Badge>
-                        <span className="font-bold">600 جنيه</span>
-                      </div>
-                      <CardTitle className="mt-2">مثال: فيزياء - اولي ثانوي - الترم الأول</CardTitle>
-                      <p className="text-muted-foreground text-sm">4 Units • 20 Video • 12 PDF</p>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full" asChild><Link href="/register"><Lock size={16}/> سجل دخول للعرض</Link></Button>
-                    </CardContent>
-                  </Card>
+                  <div key={i} className="p-0 overflow-hidden bento-card">
+                    <div className="flex justify-center items-center bg-[#EDE8D0] h-44">Cover</div>
+                    <div className="p-4">
+                      <div className="flex justify-between items-center"><Badge className="bg-[#F7F36A] dark:bg-[#4A4000] border-black dark:border-zinc-600 text-black text-black dark:text-[#F7F36A]">اولي ثانوي</Badge><span className="font-black">600 جنيه</span></div>
+                      <p className="mt-2 font-bold">مثال: فيزياء - اولي ثانوي</p>
+                      <p className="text-muted-foreground text-xs">4 Units • 20 Video • 12 PDF</p>
+                      <Button className="mt-3 w-full" asChild><Link href="/register"><Lock size={14}/> سجل للعرض</Link></Button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )
           ) : (
-            <div className="gap-6 grid md:grid-cols-3">
+            <div className="gap-4 grid md:grid-cols-3">
               {courses.map((c:any)=>{
                 const cover = getPublicCoverUrl(c.cover_url);
+                const yearColor = c.year==="تالتة ثانوي" ? "bg-[#FF6B35] text-white" : c.year==="تانية ثانوي" ? "bg-[#F7F36A] dark:bg-[#4A4000] dark:text-[#F7F36A] text-black dark:border-zinc-600 text-black" : "bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700";
                 return (
-                <Card key={c.id} className="hover:shadow-lg overflow-hidden transition">
-                  <div className="flex justify-center items-center bg-zinc-200 h-48 overflow-hidden">
-                    {cover ? <img src={cover} alt={c.title} className="w-full h-full object-cover"/> : <span className="text-muted-foreground">Cover</span>}
+                <div key={c.id} className="p-0 overflow-hidden transition hover:translate-y-[-2px] bento-card">
+                  <div className="bg-[#EDE8D0] border-black border-b-[1.5px] h-44 overflow-hidden">
+                    {cover ? <img src={cover} alt={c.title} className="w-full h-full object-cover"/> : <div className="flex justify-center items-center w-full h-full text-muted-foreground">Cover</div>}
                   </div>
-                  <CardHeader>
+                  <div className="p-4">
                     <div className="flex justify-between items-center">
-                      <Badge>{c.year}</Badge>
-                      <span className="font-bold">{c.price} جنيه</span>
+                      <Badge className={`${yearColor} border-black`}>{c.year}</Badge>
+                      <span className="bg-[#F7F36A] dark:bg-[#4A4000] px-2 py-0.5 border border-black dark:border-zinc-600 rounded-full font-black text-black dark:text-[#F7F36A] text-sm">{c.price} جنيه</span>
                     </div>
-                    <CardTitle className="mt-2 line-clamp-2">{c.title}</CardTitle>
-                    <p className="text-muted-foreground text-sm line-clamp-2">{c.description}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full" asChild><Link href={`/courses/${c.id}`}><Lock size={16}/> عرض الكورس</Link></Button>
-                  </CardContent>
-                </Card>
+                    <p className="mt-2 font-black line-clamp-2">{c.title}</p>
+                    <p className="text-muted-foreground text-xs line-clamp-2">{c.description}</p>
+                    <Button className="bg-black mt-3 w-full" asChild><Link href={`/courses/${c.id}`}><Lock size={14}/> عرض الكورس</Link></Button>
+                  </div>
+                </div>
                 );
               })}
             </div>
           )}
-          <p className="mt-8 text-muted-foreground text-sm text-center">⚠️ لا يمكنك مشاهدة الفيديوهات أو تحميل الـ PDFs بدون اشتراك مفعل</p>
+          <p className="bg-[#F7F36A] dark:bg-[#4A4000] mx-auto mt-4 px-3 py-1 border border-black dark:border-zinc-600 rounded-full w-fit text-black dark:text-[#F7F36A] text-xs text-center">⚠️ الفيديوهات والـ PDFs للمشتركين المفعلين فقط</p>
         </div>
       </section>
 
-      <section className="py-16 text-center">
-        <h3 className="mb-3 font-bold text-2xl">جاهز تبدأ؟</h3>
-        <p className="mb-6 text-muted-foreground">أنشئ حساب واختر سنتك الدراسية</p>
-        <Button size="lg" asChild><Link href="/register">انشاء حساب الآن</Link></Button>
+      <section className="flex sm:flex-row flex-col justify-between items-center gap-4 mx-auto p-6 w-full max-w-7xl bento-card-orange">
+        <div>
+          <h3 className="font-black text-xl">جاهز تبدأ؟</h3>
+          <p className="opacity-80 text-sm">أنشئ حساب واختر سنتك الدراسية</p>
+        </div>
+        <Button size="lg" className="bg-white hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 border-black dark:border-zinc-700 rounded-full text-black dark:text-zinc-100" asChild><Link href="/register">انشاء حساب الآن <ArrowUpRight size={16}/></Link></Button>
       </section>
     </div>
   );

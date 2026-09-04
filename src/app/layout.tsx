@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -16,13 +17,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full antialiased`}>
-      <body className="flex flex-col bg-zinc-50 dark:bg-zinc-950 min-h-full font-sans">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <footer className="bg-white py-6 border-t text-muted-foreground text-sm text-center">
-          © {new Date().getFullYear()} منصة أحمد الجزار - جميع الحقوق محفوظة
-        </footer>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="flex flex-col bg-[#EDE8D0] dark:bg-zinc-900 min-h-full font-sans">
+        <ThemeProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <footer className="mx-auto max-w-7xl w-[calc(100%-16px)] sm:w-[calc(100%-32px)] bg-white dark:bg-zinc-800 border-[1.5px] border-black dark:border-zinc-700 rounded-2xl py-4 mb-4 mt-8 text-center text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.1)]">
+            © {new Date().getFullYear()} منصة أحمد الجزار — تعليم تفاعلي يلهم
+          </footer>
+        </ThemeProvider>
       </body>
     </html>
   );
