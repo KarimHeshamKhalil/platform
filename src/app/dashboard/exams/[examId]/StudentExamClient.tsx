@@ -62,23 +62,27 @@ export default function StudentExamClient({ exam, questions, userId, lastAttempt
 
   // Show graded result after admin correction
   if (lastAttempt && !result) {
-    const autoScore = gradedAnswers.filter((a:any)=> a.is_correct!==null).reduce((s:number,a:any)=>s+Number(a.points_awarded||0),0);
+    const isAuto = (a:any)=> a.questions?.type==="mcq" || a.questions?.type==="true_false";
+    const isWritten = (a:any)=> a.questions?.type==="short_answer" || a.questions?.type==="essay";
+    const autoScore = gradedAnswers.filter((a:any)=> isAuto(a) && a.is_correct!==null).reduce((s:number,a:any)=>s+Number(a.points_awarded||0),0);
+    const writtenScore = gradedAnswers.filter((a:any)=> isWritten(a) && a.is_correct!==null).reduce((s:number,a:any)=>s+Number(a.points_awarded||0),0);
     const pending = gradedAnswers.filter((a:any)=> a.is_correct===null).length;
     const totalAuto = autoQs.reduce((s:number,q:any)=>s+Number(q.points),0);
     const totalWritten = writtenQs.reduce((s:number,q:any)=>s+Number(q.points),0);
-    const gradedWritten = gradedAnswers.filter((a:any)=> a.questions?.type==="short_answer"||a.questions?.type==="essay").filter((a:any)=>a.is_correct!==null);
-    const hasGradedWritten = gradedWritten.length>0 || pending===0 && writtenQs.length>0;
+    const totalScore = autoScore + writtenScore;
+    const totalPoints = totalAuto + totalWritten;
+    const hasGradedWritten = gradedAnswers.filter((a:any)=> isWritten(a) && a.is_correct!==null).length>0;
 
-    // If submission exists, show result card instead of form
     if (lastAttempt.submitted_at) {
       return (
-        <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
+        <div className="space-y-4 mx-auto px-4 py-8 max-w-3xl">
           <Card>
             <CardHeader><CardTitle>نتيجة آخر محاولة</CardTitle></CardHeader>
             <CardContent className="space-y-2">
-              <p className="font-medium">درجة الأسئلة الموضوعية: {autoScore} / {totalAuto} {exam.pass_grade_percent ? `— ${autoScore/totalAuto*100 >= exam.pass_grade_percent ? "ناجح" : "راسب"} (للنجاح ${exam.pass_grade_percent}%)` : ""}</p>
-              {writtenQs.length>0 && pending>0 && <p className="text-sm bg-orange-50 border border-orange-200 rounded p-2">لديك {pending} أسئلة مقالية قيد التصحيح بواسطة المدرس. الدرجة النهائية ستظهر بعد التصحيح.</p>}
-              {writtenQs.length>0 && pending===0 && hasGradedWritten && <p className="text-sm bg-green-50 border rounded p-2">تم تصحيح الأسئلة المقالية — الدرجة الكاملة: {(autoScore + gradedWritten.reduce((s:number,a:any)=>s+Number(a.points_awarded||0),0))} / {totalAuto + totalWritten}</p>}
+              <p className="font-medium">درجة الأسئلة الموضوعية: {autoScore} / {totalAuto} {totalAuto>0 && exam.pass_grade_percent ? `— ${autoScore/totalAuto*100 >= exam.pass_grade_percent ? "ناجح" : "راسب"} (للنجاح ${exam.pass_grade_percent}%)` : ""}</p>
+              {writtenQs.length>0 && pending>0 && <p className="bg-orange-50 p-2 border border-orange-200 rounded text-sm">لديك {pending} أسئلة مقالية قيد التصحيح بواسطة المدرس. الدرجة النهائية ستظهر بعد التصحيح.</p>}
+              {writtenQs.length>0 && pending===0 && hasGradedWritten && <div className="my-5"><p className="inline bg-green-700 px-4 py-2 rounded-full text-green-50 text-sm">تم تصحيح الأسئلة المقالية — الدرجة الكاملة: {totalScore} / {totalPoints}</p></div>}
+              {writtenQs.length===0 && <p className="bg-green-50 p-2 border rounded text-sm">الدرجة الكاملة: {totalScore} / {totalPoints}</p>}
               <Button variant="outline" onClick={()=>window.location.href="/dashboard"}>رجوع للوحة</Button>
             </CardContent>
           </Card>
@@ -90,21 +94,21 @@ export default function StudentExamClient({ exam, questions, userId, lastAttempt
                 const isWritten = qType==="short_answer" || qType==="essay";
                 return (
                 <Card key={a.id} className="overflow-hidden">
-                  <CardContent className="pt-4 space-y-2">
+                  <CardContent className="space-y-2 pt-4">
                     <p className="font-medium text-sm break-words whitespace-pre-wrap">{a.questions?.prompt}</p>
                     {isWritten ? (
-                      <div className="bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 border rounded-lg p-3 w-full overflow-hidden">
-                        <p className="text-xs text-muted-foreground mb-1">إجابتك:</p>
-                        <p className="text-sm whitespace-pre-wrap break-words break-all max-w-full leading-relaxed bg-zinc-50 rounded p-2 border min-h-[40px]">{a.response?.trim() ? a.response : "— لم يجب"}</p>
+                      <div className="bg-white dark:bg-zinc-800 p-3 border dark:border-zinc-700 rounded-lg w-full overflow-hidden dark:text-zinc-100">
+                        <p className="mb-1 text-muted-foreground text-xs">إجابتك:</p>
+                        <p className="bg-zinc-50 dark:bg-zinc-800 p-2 border rounded max-w-full min-h-[40px] text-sm break-all break-words leading-relaxed whitespace-pre-wrap">{a.response?.trim() ? a.response : "— لم يجب"}</p>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         {a.is_correct ? <Badge className="bg-green-600">صحيح ✓</Badge> : a.is_correct===false ? <Badge variant="destructive">خطأ ✗</Badge> : <Badge variant="secondary">قيد التصحيح</Badge>}
-                        <span className="text-sm text-muted-foreground">{a.is_correct!==null ? `${a.points_awarded ?? 0} نقطة` : ""}</span>
+                        <span className="text-muted-foreground text-sm">{a.is_correct!==null ? `${a.points_awarded ?? 0} نقطة` : ""}</span>
                       </div>
                     )}
                     {a.is_correct===null && isWritten && <Badge variant="secondary">قيد التصحيح</Badge>}
-                    {a.admin_note && <p className="text-sm bg-blue-50 border rounded p-2 break-words whitespace-pre-wrap">ملاحظة المدرس: {a.admin_note}</p>}
+                    {a.admin_note && <p className="bg-blue-50 p-2 border rounded text-sm break-words whitespace-pre-wrap">ملاحظة المدرس: {a.admin_note}</p>}
                   </CardContent>
                 </Card>
                 );
@@ -119,10 +123,10 @@ export default function StudentExamClient({ exam, questions, userId, lastAttempt
 
   if (result) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="mx-auto px-4 py-8 max-w-3xl">
         <Card><CardHeader><CardTitle>تم التسليم ✓</CardTitle></CardHeader><CardContent className="space-y-2">
           <p>درجة الأسئلة الموضوعية: {result.autoScore} / {result.autoTotal}</p>
-          {result.pending>0 && <p className="text-sm bg-orange-50 border rounded p-2">{result.pending} أسئلة مقالية قيد التصحيح — ستظهر النتيجة النهائية بعد تصحيح المدرس من لوحة الإدارة.</p>}
+          {result.pending>0 && <p className="bg-orange-50 p-2 border rounded text-sm">{result.pending} أسئلة مقالية قيد التصحيح — ستظهر النتيجة النهائية بعد تصحيح المدرس من لوحة الإدارة.</p>}
           {result.pending===0 && exam.pass_grade_percent && <p>{result.autoScore / result.autoTotal * 100 >= exam.pass_grade_percent ? "ناجح" : "راسب"}</p>}
           <Button className="mt-4" onClick={()=>window.location.href="/dashboard"}>رجوع</Button>
         </CardContent></Card>
@@ -131,10 +135,10 @@ export default function StudentExamClient({ exam, questions, userId, lastAttempt
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+    <div className="space-y-6 mx-auto px-4 py-8 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold">{exam.title} <Badge>{exam.type==="exam"?"امتحان":"واجب"}</Badge></h1>
-        <p className="text-xs text-muted-foreground">الموضوعي: {autoQs.length} سؤال ({autoTotal} نقطة) • المقالي: {writtenQs.length} سؤال {writtenQs.length>0 && "— سيتم تصحيحه يدويا"}</p>
+        <h1 className="font-bold text-2xl">{exam.title} <Badge>{exam.type==="exam"?"امتحان":"واجب"}</Badge></h1>
+        <p className="text-muted-foreground text-xs">الموضوعي: {autoQs.length} سؤال ({autoTotal} نقطة) • المقالي: {writtenQs.length} سؤال {writtenQs.length>0 && "— سيتم تصحيحه يدويا"}</p>
         {!canAttempt && <p className="text-red-600">وصلت للحد الأقصى للمحاولات ({exam.max_attempts})</p>}
       </div>
       {questions.map((q:any, idx:number)=>(
@@ -142,7 +146,7 @@ export default function StudentExamClient({ exam, questions, userId, lastAttempt
           <CardHeader><CardTitle className="text-base">س{idx+1}: {q.prompt} <Badge variant="outline">{q.points} نقطة</Badge> <Badge variant="secondary" className="text-xs">{q.type==="mcq"?"اختيار":q.type==="true_false"?"صح/خطأ":q.type==="short_answer"?"قصير":"مقالي"}</Badge></CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {(q.type==="mcq" || q.type==="true_false") && q.question_options.map((o:any)=>(
-              <label key={o.id} className="flex gap-2 items-center border rounded px-3 py-2 hover:bg-zinc-50 cursor-pointer">
+              <label key={o.id} className="flex items-center gap-2 hover:bg-zinc-50 px-3 py-2 border rounded cursor-pointer">
                 <input type="radio" name={q.id} checked={answers[q.id]===o.id} onChange={()=>setAnswers({...answers, [q.id]:o.id})} />
                 <span>{o.option_text}</span>
               </label>
